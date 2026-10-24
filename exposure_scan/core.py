@@ -137,7 +137,7 @@ def build(out, client_dirs, bundle, E, since, maps, redact):
     leaves = sorted(li for v in by_sid.values() for li in v)
     with open(os.path.join(A, "tlog", "records.jsonl"), "w") as f:
         for li in leaves:
-            f.write(json.dumps(bundle.recs[li], sort_keys=True, ensure_ascii=False) + "\n")
+            f.write(json.dumps(bundle.rec(li), sort_keys=True, ensure_ascii=False) + "\n")
     arts["tlog_records"] = {"path": "artifacts/tlog/records.jsonl", "role": "tlog_records", "provenance": "signed_log",
                             "source": "bundle:tlog/records.jsonl, feuilles %s" % leaves, "source_sha256": sha_file(bundle.p("tlog", "records.jsonl"))}
     proofs = []
@@ -196,6 +196,7 @@ def build(out, client_dirs, bundle, E, since, maps, redact):
             "excluded_sources": {"count": len(excluded), "reason": "transcriptions dont le dernier mtime précède %s" % since,
                                  "paths": [show(e["path"]) for e in excluded]},
             "producer": {"tool": "exposure_scan %s" % __version__, "bundle_manifest_sha256": bundle.manifest_sha, "pin_status": bundle.pin_status,
+                         "bundle_mode": bundle.mode, "bundle_servers": bundle.servers,
                          "paths_redacted": bool(redact), "manual_maps": len(maps)}}
     open(os.path.join(out, "inputs.json"), "w").write(B.dump(spec))
     eng = E[0]
@@ -228,7 +229,7 @@ def cross_check(dossier, bundle, log=print):
     for l in open(os.path.join(dossier, arts["tlog_records"]["path"])):
         if l.strip():
             r = json.loads(l)
-            if json.dumps(r, sort_keys=True) != json.dumps(bundle.recs[r["leaf_index"]], sort_keys=True):
+            if json.dumps(r, sort_keys=True) != json.dumps(bundle.rec(r["leaf_index"]), sort_keys=True):
                 raise Refused("dossier ≠ bundle : feuille %d" % r["leaf_index"])
             pr = json.load(open(os.path.join(dossier, arts["proof_%d" % r["leaf_index"]]["path"])))
             if pr["audit_path"] != bundle.inclusion_path(r["leaf_index"]) or pr["tree_size"] != bundle.sth["tree_head"]["tree_size"]:

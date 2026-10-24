@@ -4,7 +4,7 @@ Réutilise le moteur engine/ (readers.py, scan.py, build.py, vendor/) par import
 sont contrôlés contre ENGINE.sha256 avant tout import. Aucun réseau. Lecture seule des dossiers clients."""
 import hashlib, os, sys
 
-__version__ = "0.1.0"
+__version__ = "0.1.1"
 HERE = os.path.dirname(os.path.abspath(__file__))
 ENGINE_FILES = ("readers.py", "scan.py", "build.py", "verify.py", "vendor/exposure.py", "vendor/verify_tlog.py", "vendor/cov.py",
                 "vendor/merkle_v1.py", "vendor/jcs.py", "vendor/SOURCES.sha256")

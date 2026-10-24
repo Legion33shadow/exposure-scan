@@ -11,7 +11,7 @@ dossier vérifiable : chaque appel y est classé par rapport à un historique ex
 
 Trust & status. Verifies offline against the LEGION MCP transparency log, signed with a pinned Ed25519 key — verify the pinned key and this release’s SHA-256 out-of-band. An independent witness cosignature is pending (not yet witnessed). A tool-definition match to a signed entry means the presented definition equals a signed fingerprint — it does not prove the tool was executed or had any effect. Local client transcripts/caches are unsigned.
 
-Running the tool requires the signed-log bundle (156 MB snapshot, SHA-256 14d50a88…), not attached in v0.1.0 due to upload bandwidth; available on request. The repo is auditable now; runnable once the bundle is obtained.
+v0.1.1 ships a demo bundle (`legion-log-demo-34964`, about 2 MB, inclusion-proof mode): 4 servers, every leaf signed and proven by an RFC 6962 path against the signed tree head 34964, so the tool runs offline out of the box. Calls to servers outside the demo stay UNKNOWN. The full signed-log snapshot (156 MB, SHA-256 14d50a88394dc9a265fa4a41123da781cdb03cdf72753cfc9cfbc5fc2d898409) is not attached (upload bandwidth); available on request.
 
 ## Ce que l'outil lit, et ce qu'il ne fait jamais
 
@@ -32,21 +32,36 @@ Running the tool requires the signed-log bundle (156 MB snapshot, SHA-256 14d50a
 Prérequis : Python ≥ 3.9 et le paquet `cryptography` (vérification Ed25519). Aucune autre dépendance.
 
 ```sh
-tar xzf exposure-scan-cli-0.1.0.tar.gz
-tar xzf legion-log-bundle-34964.tar.gz
+tar xzf exposure-scan-cli-0.1.1.tar.gz
+tar xzf legion-log-demo-34964.tar.gz
 sha256sum -c SHA256SUMS            # à comparer avec les empreintes obtenues par un autre canal
-cd exposure-scan-cli-0.1.0
-unshare -rn sh VERIFY_BUNDLE.sh ../legion-log-bundle-34964      # contrôle complet du bundle, hors ligne
+cd exposure-scan-cli-0.1.1
+unshare -rn sh VERIFY_BUNDLE.sh ../legion-log-demo-34964      # contrôle complet du bundle, hors ligne
 ```
+
+## Bundle de démonstration (mode preuve d'inclusion)
+
+`legion-log-demo-34964` est un sous-ensemble du journal signé : toutes les feuilles de 4 serveurs
+(`com.dexpaprika/dexpaprika`, `com.remoshift/jobs`, `com.swarmmemo/bulletin`, `dk.afbudsrejser/travel-search`), la tête
+signée 34964, le checkpoint C2SP, la couverture signée (tête, index, cycles) et les seules tranches de ces serveurs.
+Son `BUNDLE_MANIFEST.json` porte `"mode": "inclusion"` et la liste `servers`. Le contrôle vérifie :
+
+- la signature de la tête et la clé racine épinglée ;
+- chaque feuille : signature Ed25519 et chemin d'inclusion RFC 6962 (`tlog/proofs/INC-<i>.json`) jusqu'à la racine signée ;
+- la complétude par serveur : chaîne `prev_leaf_index` sans trou, et chaque empreinte OBSERVED de la couverture signée
+  égale à une feuille du bundle ;
+- les cycles et les tranches de couverture des serveurs déclarés.
+
+Le bundle complet (mode historique, racine recalculée sur toutes les feuilles) reste accepté tel quel.
 
 ## Lancer sur vos propres dossiers
 
 ```sh
-cd exposure-scan-cli-0.1.0
+cd exposure-scan-cli-0.1.1
 unshare -rn sh exposure-scan.sh \
   --client-dir ~/.claude --client-dir ~/.claude.json \
   --client-dir ~/.cursor --client-dir ~/.config/Cursor \
-  --log-bundle ../legion-log-bundle-34964 --out ~/mon-dossier-exposure
+  --log-bundle ../legion-log-demo-34964 --out ~/mon-dossier-exposure
 ```
 
 - `sh exposure-scan.sh` lance `python3 -I` (isolé). Équivalent non isolé, depuis ce dossier : `python3 -m exposure_scan ...`.
@@ -86,7 +101,7 @@ FAIT, qui porte sur la définition reçue par votre client.
 
 ```sh
 unshare -rn sh ~/mon-dossier-exposure/VERIFY.sh                                  # niveau 1
-unshare -rn sh exposure-scan.sh --verify ~/mon-dossier-exposure --log-bundle ../legion-log-bundle-34964
+unshare -rn sh exposure-scan.sh --verify ~/mon-dossier-exposure --log-bundle ../legion-log-demo-34964
 sh ~/mon-dossier-exposure/VERIFY.sh --sources                                   # niveau 2 : sur votre machine seulement
 ```
 
@@ -110,7 +125,11 @@ sh ~/mon-dossier-exposure/VERIFY.sh --sources                                   
   sur les empreintes `SHA256SUMS` / `BUNDLE_MANIFEST`. Ces valeurs sont à obtenir par un autre canal que l'archive
   elle-même.
 - **Fraîcheur.** Le bundle s'arrête à sa tête (34964 feuilles, couverture 53 cycles). Tout appel postérieur est UNOBSERVED.
-- **Couverture.** Seuls les serveurs présents dans le journal ont une chronologie. Les autres sont UNKNOWN.
+- **Couverture.** Seuls les serveurs présents dans le bundle ont une chronologie. Les autres sont UNKNOWN. Avec le bundle
+  de démonstration, cela veut dire : tout serveur hors des 4 serveurs de la démo.
+- **Bundle de démonstration.** La complétude d'un serveur est contrôlée par la chaîne `prev_leaf_index` et par les
+  observations de la couverture signée. Une feuille à la fois dernière de sa chaîne et postérieure au dernier cycle de
+  couverture pourrait être retirée sans être détectée. Seul le bundle complet recalcule la racine sur toutes les feuilles.
 - **Exhaustivité.** Elle n'est pas prouvée : un appel absent de vos transcriptions n'est pas vu.
 - **Impact.** Il reste inconnu : rien n'est lu des arguments ni des réponses.
 

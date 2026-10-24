@@ -4,6 +4,7 @@
                            --client-dir ~/.config/Cursor --log-bundle <BUNDLE> --out <DIR>
   python3 -m exposure_scan --verify <DOSSIER> [--log-bundle <BUNDLE>]     # niveau 1 (+ croisement avec le bundle)
   python3 -m exposure_scan --verify-bundle <BUNDLE> [--full]               # contrôle du bundle seul
+  (bundle complet ou bundle de démonstration en mode preuve d'inclusion : détecté par BUNDLE_MANIFEST.json)
 
 Options : --since 2026-10-10T00:00:00Z (défaut), --map client:nom=server_id (répétable, correspondance manuelle),
 --redact-paths (chemins des sources remplacés par une empreinte ; le niveau 2 --sources devient impossible),
@@ -49,6 +50,8 @@ def main(argv=None):
         if not (a.client_dir and a.log_bundle and a.out):
             ap.print_usage(); print("--client-dir, --log-bundle et --out sont requis"); return 2
         b = Bundle(a.log_bundle, E, a.test_key).check("quick")
+        if b.servers is not None:
+            print("bundle de démonstration (preuve d'inclusion) : seuls %s ; tout autre serveur -> UNKNOWN" % ", ".join(b.servers))
         res, m, kinds, nexcl = core.build(a.out, a.client_dir, b, E, a.since, a.map, a.redact_paths)
         print("sources reconnues : %s ; écartées (avant %s) : %d" % (json.dumps(kinds, sort_keys=True), a.since, nexcl))
         print("dossier : %s\nMANIFEST sha256 : %s" % (os.path.abspath(a.out), m))
