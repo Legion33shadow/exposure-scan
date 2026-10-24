@@ -11,6 +11,8 @@ dossier vérifiable : chaque appel y est classé par rapport à un historique ex
 
 Trust & status. Verifies offline against the LEGION MCP transparency log, signed with a pinned Ed25519 key — verify the pinned key and this release’s SHA-256 out-of-band. An independent witness cosignature is pending (not yet witnessed). A tool-definition match to a signed entry means the presented definition equals a signed fingerprint — it does not prove the tool was executed or had any effect. Local client transcripts/caches are unsigned.
 
+Running the tool requires the signed-log bundle (156 MB snapshot, SHA-256 14d50a88…), not attached in v0.1.0 due to upload bandwidth; available on request. The repo is auditable now; runnable once the bundle is obtained.
+
 ## Ce que l'outil lit, et ce qu'il ne fait jamais
 
 - **Il lit, en lecture seule, uniquement :**
