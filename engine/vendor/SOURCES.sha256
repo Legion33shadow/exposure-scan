@@ -1,0 +1,6 @@
+23728659f028fcdf97dcf81c66cd652a2d8d1bb3ed5eee44af1fac814e3b2667  verify_tlog.py
+7f8a652989792ffd0358c1b1d48ac552c689f1593a3dfbef609ed03bb651948f  cov.py
+e2805561e6e62680f20a8ce617e0ccbc820342719b87e31bf547082a4c3ad724  merkle_v1.py
+3bc7012f2d5db3c1f7f6a35ede7836dc3e46ef0835fddf50c030d8a44653159d  jcs.py
+8cca6c38e6dbcdeb0cfbe3e819549099bc56d07cc44e9e6ced2ce9e7c467204f  exposure.py
+source : change-exposure-20261024/engine/{vendor/*,exposure.py} (copies non modifiées, moteur change-exposure-20261024 lu en lecture seule)
